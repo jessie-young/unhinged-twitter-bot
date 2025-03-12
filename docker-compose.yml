@@ -1,10 +1,23 @@
 services:
+
   events-pubsub:
     image: redis:latest
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
+  batch-ingest-subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.batch_ingest_subscriber
+    depends_on:
+      - events-pubsub
+    environment:
+      - REDIS_EVENTS_PUBSUB_ADDR=events-pubsub:6379
+    volumes:
+      - .env.dev:/app/.env.dev
+      - ./data/batch_ingest_dump:/app/dump
 
 volumes:
   redis_data:
