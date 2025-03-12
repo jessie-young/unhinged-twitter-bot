@@ -15,7 +15,7 @@ df = pd.DataFrame(
 )
 df_csv = pd.read_csv('./data/datasets/twitter_dataset.csv')
 
-tbl = db.create_table("table_from_df", data=df_csv)
+tbl = db.create_table("twitter_db", data=df_csv)
 
 df = daft.read_lance(url="./data/lancedb/table_from_df.lance")
 
