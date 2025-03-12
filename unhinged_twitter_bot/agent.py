@@ -1,14 +1,17 @@
+import os
+
 import redis
 import yaml
 from openai import OpenAI
-import os
+from twitter import TwitterAPI
 
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
-with open("personality.yaml", "r") as file:
+with open("personality.yaml") as file:
     personality = yaml.safe_load(file)
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 
 def generate_chain_of_thought(tweet, personality):
     prompt = f"""Given this tweet: "{tweet}"
@@ -25,13 +28,17 @@ First analyze the tweet, then consider your personality traits, and finally gene
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are an AI agent responding to tweets. Think through your response step by step."},
-            {"role": "user", "content": prompt}
+            {
+                "role": "system",
+                "content": "You are an AI agent responding to tweets. Think through your response step by step.",
+            },
+            {"role": "user", "content": prompt},
         ],
-        temperature=0.7
+        temperature=0.7,
     )
 
     return response.choices[0].message.content
+
 
 def process_tweet(tweet):
     try:
@@ -46,10 +53,10 @@ def process_tweet(tweet):
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Generate a concise tweet response."},
-                {"role": "user", "content": response_prompt}
+                {"role": "user", "content": response_prompt},
             ],
             temperature=0.7,
-            max_tokens=100
+            max_tokens=100,
         )
 
         final_response = response.choices[0].message.content
@@ -64,21 +71,28 @@ Final Response:
         return final_output
 
     except Exception as e:
-        return f"Error processing tweet: {str(e)}"
+        return f"Error processing tweet: {e!s}"
+
 
 def run_agent():
-    while True:
-        messages = r.xread({"tweet_stream": "$"}, count=1, block=5000)
-        if messages:
-            _, entries = messages[0]
-            for _, data in entries:
-                tweet = data["tweet"]
-                response = process_tweet(tweet)
+    twitter = TwitterAPI()
+    for tweet_str in twitter.get_tweets():
+        try:
+            tweet_data = eval(tweet_str)
 
-                with open("responses.txt", "a") as f:
-                    f.write(response + "\n")
+            # Skip if the tweet is from ourself.
+            if tweet_data["author"] == personality["name"]:
+                print(f"Skipping own tweet from {tweet_data['author']}")
+                continue
 
-                print("Wrote tweet!")
+            response = process_tweet(tweet_data["content"])
+            twitter.make_tweet(response, personality["name"])
+            print(f"Responded to tweet from {tweet_data['author']}!")
+
+        except Exception as e:
+            print(f"Error processing tweet data: {e!s}")
+            continue
+
 
 if __name__ == "__main__":
     run_agent()
