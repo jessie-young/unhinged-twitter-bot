@@ -1,0 +1,10 @@
+services:
+  events-pubsub:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
