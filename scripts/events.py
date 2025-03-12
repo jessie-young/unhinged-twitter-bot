@@ -1,7 +1,5 @@
 import argparse
-import redis
 
-from unhinged_twitter_bot.config import REDIS_EVENTS_PUBSUB_ADDR, REDIS_TWEET_TOPIC
 from unhinged_twitter_bot.twitter import TwitterAPI
 
 
