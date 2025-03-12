@@ -25,7 +25,7 @@ def view_tweet():
     pubsub.unsubscribe()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser("events_cli")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -40,3 +40,5 @@ if __name__ == "__main__":
         make_tweet(args.author, args.content)
     elif args.command == "view-tweet":
         view_tweet()
+    else:
+        raise ValueError(f"Unrecognized command: {args.command}")
