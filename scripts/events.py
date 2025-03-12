@@ -12,17 +12,10 @@ def make_tweet(author: str, content: str):
 
 
 def view_tweet():
-    r = redis.Redis.from_url(f"redis://{REDIS_EVENTS_PUBSUB_ADDR}")
-    pubsub = r.pubsub()
-    pubsub.subscribe(REDIS_TWEET_TOPIC)
-    
-    print("Listening for tweets...")
-    for message in pubsub.listen():
-        if message["type"] == "message":
-            print(f"Received tweet: {message['data'].decode('utf-8')}")
-            break  # Exit after receiving one message
-    
-    pubsub.unsubscribe()
+    api = TwitterAPI.get_api()
+
+    for tweet in api.get_tweets():
+        print(f"Received tweet: {tweet}")
 
 
 def main():
@@ -33,12 +26,12 @@ def main():
     make_tweet_parser.add_argument("--author", required=True, help="Author name")
     make_tweet_parser.add_argument("content", help="Text content of the tweet")
 
-    make_tweet_parser = subparsers.add_parser("view-tweet", help="View tweets on event stream") 
+    make_tweet_parser = subparsers.add_parser("view-tweets", help="View tweets on event stream") 
 
     args = parser.parse_args()
     if args.command == "make-tweet":
         make_tweet(args.author, args.content)
-    elif args.command == "view-tweet":
+    elif args.command == "view-tweets":
         view_tweet()
     else:
         raise ValueError(f"Unrecognized command: {args.command}")
