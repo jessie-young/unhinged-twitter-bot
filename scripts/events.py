@@ -1,32 +1,20 @@
 import argparse
-import os
 import redis
 
-from dotenv import load_dotenv
-
-
-load_dotenv(dotenv_path=".env.dev")
-
-
-REDIS_ADDR = os.environ["REDIS_EVENTS_PUBSUB_ADDR"]
-REDIS_TOPIC_NAME = "tweets"
+from unhinged_twitter_bot.config import REDIS_EVENTS_PUBSUB_ADDR, REDIS_TWEET_TOPIC
+from unhinged_twitter_bot.twitter import TwitterAPI
 
 
 def make_tweet(author: str, content: str):
     print(f"Making tweet for @{author}: {content}")
-    r = redis.Redis.from_url(f"redis://{REDIS_ADDR}")
-    tweet_data = {
-        "author": author,
-        "content": content
-    }
-    result = r.publish(REDIS_TOPIC_NAME, str(tweet_data))
-    print(f"Published to Redis topic `{REDIS_TOPIC_NAME}` with result: {result}")
+    api = TwitterAPI.get_api()
+    api.make_tweet(content, author)
 
 
 def view_tweet():
-    r = redis.Redis.from_url(f"redis://{REDIS_ADDR}")
+    r = redis.Redis.from_url(f"redis://{REDIS_EVENTS_PUBSUB_ADDR}")
     pubsub = r.pubsub()
-    pubsub.subscribe(REDIS_TOPIC_NAME)
+    pubsub.subscribe(REDIS_TWEET_TOPIC)
     
     print("Listening for tweets...")
     for message in pubsub.listen():
