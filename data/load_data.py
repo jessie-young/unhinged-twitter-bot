@@ -15,12 +15,8 @@ class Words(LanceModel):
     text: str = func.SourceField()
     vector: Vector(func.ndims()) = func.VectorField()
 
-# df_csv = pd.read_csv('./data/datasets/twitter_dataset.csv')
 
 df = daft.read_csv('./data/datasets/twitter_dataset.csv')
-
-# Convert the 'Text' column to embeddings
-# df_daft = df_daft.with_column("vector", func.embed(df_daft["Text"]))
 
 # Create a LanceDB table with the embeddings and other metadata
 table = db.create_table("tweets", schema=Words, mode="overwrite")

@@ -18,6 +18,18 @@ services:
     volumes:
       - .env.dev:/app/.env.dev
       - ./data/batch_ingest_dump:/app/dump
+      
+  tweet-embedding-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.tweet_embedding_service
+    depends_on:
+      - events-pubsub
+    environment:
+      - REDIS_EVENTS_PUBSUB_ADDR=events-pubsub:6379
+    volumes:
+      - .env.dev:/app/.env.dev
+      - ./data:/app/data
 
 volumes:
   redis_data:

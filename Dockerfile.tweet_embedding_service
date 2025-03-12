@@ -1,0 +1,20 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Add additional dependencies needed for this service
+RUN pip install --no-cache-dir redis
+
+# Copy service code
+COPY services/tweet_embedding_service.py /app/
+COPY data /app/data
+
+# Make script executable
+RUN chmod +x /app/tweet_embedding_service.py
+
+# Run the service
+CMD ["python", "/app/tweet_embedding_service.py"] 
