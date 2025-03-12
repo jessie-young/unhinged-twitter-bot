@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "getdaft>=0.4.7",
+    "kagglehub>=0.3.10",
     "python-dotenv>=1.0.1",
     "redis>=5.2.1",
 ]
