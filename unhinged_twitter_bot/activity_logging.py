@@ -8,7 +8,7 @@ from unhinged_twitter_bot.config import AGENT_LOG_FOLDER
 
 
 class AgentSessionLogger:
-    def __init__(self, session_id: str, log_dump_folder: str):
+    def __init__(self, agent_name: str, session_id: str, log_dump_folder: str):
         self.log_dump_folder = log_dump_folder
         self.session_id = session_id
         self.log_file = None
@@ -28,6 +28,7 @@ class AgentSessionLogger:
             self.log_file.write(
                 json.dumps(
                     {
+                        "agent_name": self.agent_name,
                         "session_id": self.session_id,
                         "log_idx": self.session_log_idx,
                         "type": "prompt",
@@ -48,6 +49,7 @@ class AgentSessionLogger:
             self.log_file.write(
                 json.dumps(
                     {
+                        "agent_name": self.agent_name,
                         "session_id": self.session_id,
                         "log_idx": self.session_log_idx,
                         "type": "mcp_hdb",
@@ -72,5 +74,5 @@ class AgentLogger:
     @contextlib.contextmanager
     def session_logger(self, session_id: str) -> Generator[AgentSessionLogger, Any, Any]:
         print(f"CREATING AGENT SESSION LOGGER: {self.dest}")
-        with AgentSessionLogger(session_id, self.dest) as logger:
+        with AgentSessionLogger(self.agent_name, session_id, self.dest) as logger:
             yield logger

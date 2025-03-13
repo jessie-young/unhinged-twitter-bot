@@ -90,7 +90,7 @@ def run_simulation(seed: SimulationSeed, build: bool):
 
         # Maker the tweets
         print("Getting ready to fire off tweets...")
-        time.sleep(8)
+        time.sleep(4)
         print("We're ready -- let's tweet!")
         api = TwitterAPI()
         for tweet in seed.simulation_event_stream:
