@@ -18,7 +18,6 @@ dependencies = [
 
 [project.scripts]
 events = "scripts.events:main"
-batch_ingest_subscriber = "unhinged_twitter_bot.batch_ingest_subscriber.main:main"
 
 [build-system]
 requires = ["hatchling"]
