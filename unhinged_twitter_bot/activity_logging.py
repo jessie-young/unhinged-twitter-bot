@@ -12,6 +12,7 @@ class AgentSessionLogger:
         self.log_dump_folder = log_dump_folder
         self.session_id = session_id
         self.log_file = None
+        self.agent_name = agent_name
 
         self.session_log_idx = 0
 
