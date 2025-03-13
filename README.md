@@ -152,5 +152,32 @@ To view tweets stored in LanceDB:
 uv run services/view_lancedb_data.py
 ```
 
+## Loading Seed Data
+
+The project includes a data loading script that can be used to populate the LanceDB database with tweets from JSON files. This is useful for creating seed data as a starting point for simulations.
+
+### Loading Twitter Data
+
+To load Twitter data into the vector database, use the `load_data.py` script:
+
+```bash
+# Load startup-related tweets from the JSON file into a table named 'tweets'
+uv run data/load_data.py --input-json data/datasets/twitter_data_20250312_164318.json --db-uri data/seed --table-name tweets
+```
+
+#### Parameters:
+
+- `--input-json`: Path to the JSON file containing the tweets
+- `--db-uri`: Directory where the LanceDB database will be stored (in this example, `data/seed`)
+- `--table-name`: Name of the table to create in the database (default: 'tweets')
+
+The script will:
+1. Load the tweets from the JSON file
+2. Process and embed them using the BAAI/bge-small-en-v1.5 model
+3. Store them in a LanceDB table at the specified location
+4. Display a summary of the loaded data
+
+Once loaded, the seed data will be available at the specified `--db-uri` location and can be accessed by the application for similarity searches or other operations.
+
 ## Wish List
 - lance writer
