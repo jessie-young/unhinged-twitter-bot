@@ -1,14 +1,13 @@
 import os
+from pathlib import Path
 
 import redis
 import yaml
 from openai import OpenAI
-from twitter import TwitterAPI
+
+from .twitter import TwitterAPI
 
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
-
-with open("personality.yaml") as file:
-    personality = yaml.safe_load(file)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -23,6 +22,7 @@ Current mood: {personality.get('mood', 'neutral')}
 
 Think through how you would respond to this tweet, step by step.
 First analyze the tweet, then consider your personality traits, and finally generate a response that matches your personality.
+We want to make high quality responses that are interesting and tend to get lots of engagement.
 """
 
     response = client.chat.completions.create(
@@ -40,19 +40,19 @@ First analyze the tweet, then consider your personality traits, and finally gene
     return response.choices[0].message.content
 
 
-def process_tweet(tweet):
+def process_tweet(tweet, personality):
     try:
         chain_of_thought = generate_chain_of_thought(tweet, personality)
 
         response_prompt = f"""Based on the analysis, generate a tweet response as {personality['name']}.
         Tweet: {tweet}
         Personality: {personality}
-        Make it concise and tweet-length appropriate."""
+        Make it tweet-length appropriate and interesting."""
 
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Generate a concise tweet response."},
+                {"role": "system", "content": "Generate a tweet response."},
                 {"role": "user", "content": response_prompt},
             ],
             temperature=0.7,
@@ -108,7 +108,12 @@ Respond with either YES or NO, followed by a brief explanation.
     return is_relevant, explanation
 
 
-def run_agent():
+def run_agent(personality_path: str | Path):
+    """Run an agent with the given personality file."""
+    # Load personality from file
+    with open(personality_path) as file:
+        personality = yaml.safe_load(file)
+
     twitter = TwitterAPI()
     for tweet_str in twitter.get_tweets():
         try:
@@ -126,7 +131,7 @@ def run_agent():
                 continue
 
             print(f"Processing relevant tweet: {explanation}")
-            response = process_tweet(tweet_data["content"])
+            response = process_tweet(tweet_data["content"], personality)
             twitter.make_tweet(response, personality["name"])
             print(f"Responded to tweet from {tweet_data['author']}!")
 
