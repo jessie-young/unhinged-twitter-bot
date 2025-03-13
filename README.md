@@ -24,19 +24,9 @@ This will start:
 
 ### Running Simulation
 
-First, run the services with the appropriate LanceDB table name. This is your "seed" data.
-
 ```bash
-LANCEDB_TABLE_NAME=my_tweets_table docker-compose up --build
+uv run simulate test_simulation --tweets-file data/simulation_tweets/some_startup_tweets.txt --seed-memory-id startups
 ```
-
-Now you can run the simulation script with:
-
-```bash
-uv run simulate --tweets "Hello world" "Index this" "now"
-```
-
-You can pass in an arbitrary number of tweets this way. In the future we will extend this to be a .txt file.
 
 ### Testing the System
 
