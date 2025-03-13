@@ -14,13 +14,13 @@ class SimulationSeed:
     simulation_event_stream: list[str]
 
 
-def run_simulation(seed: SimulationSeed):
+def run_simulation(seed: SimulationSeed, build: bool):
     print("Spinning up simulation world...")
     proc = subprocess.Popen([
         "docker-compose",
         "up",
         "-d",
-        # "--build",
+        *([] if build else ["--build"]),
     ],
     env={
         "LANCEDB_TABLE_NAME": seed.seed_memory_id,
@@ -73,6 +73,7 @@ def main():
     parser.add_argument("simulation_id", help="Unique identifier for the simulation run")
     parser.add_argument("--tweets-file", required=True, help="txt file containing tweets to simulate")
     parser.add_argument("--seed-memory-id", required=True, help="Unique identifier for the memory to seed the simulation with")
+    parser.add_argument("--build", action="store_true", help="Rebuild the containers")
 
     args = parser.parse_args()
 
@@ -85,4 +86,4 @@ def main():
         simulation_event_stream=tweets,
     )
 
-    run_simulation(seed)
+    run_simulation(seed, args.build)
