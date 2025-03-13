@@ -43,7 +43,7 @@ uv run scripts/test_tweet_publisher.py --username username --text "Your tweet co
 
 ### Collecting Twitter Data
 
-You can use the Twitter data collector script to fetch tweets from the Twitter API based on specific topics.
+You can use the Twitter data collector script to fetch tweets from the Twitter API based on specific topics or from specific Twitter accounts.
 
 #### Setup Twitter API Access
 
@@ -60,23 +60,74 @@ You can use the Twitter data collector script to fetch tweets from the Twitter A
 
 #### Running the Collector
 
-Basic usage:
+The collector script supports two modes:
+- **Topics mode**: Collect tweets matching specific search queries
+- **Authors mode**: Collect tweets from specific Twitter accounts
+
+##### Basic Usage:
 
 ```bash
-python data/twitter_data_collector.py
+# Default mode (topics)
+python data/twitter_data_collector.py 
+
+# Author mode with default authors
+python data/twitter_data_collector.py --mode authors
 ```
 
-#### Example: Collecting Startup-Related Tweets
+##### Twitter API Rate Limits
+
+The script implements rate limit handling to avoid Twitter API errors:
+- Free tier limits: 450 requests per 15-minute window for search, 300 requests for user timelines
+- The script spaces out requests and will automatically wait when approaching limits
+
+##### Example: Collecting Startup-Related Tweets (Topics Mode)
 
 To collect tweets related to startups, founders, and venture capital:
 
 ```bash
-python data/twitter_data_collector.py --topics "startup OR founder OR entrepreneur OR \"Y Combinator\" OR YC OR VC OR funding OR \"Series A\" OR \"Series B\" -is:retweet lang:en"
+uv run data/twitter_data_collector.py --mode topics --topics "startup OR founder OR entrepreneur OR \"Y Combinator\" OR YC OR VC OR funding OR \"Series A\" OR \"Series B\" -is:retweet lang:en"
 ```
 
-**Important Note**: When specifying query terms with spaces, use double quotes around phrases. The Twitter API will reject queries with single quotes.
+##### Example: Collecting Tweets from Specific Authors
 
-The collected data will be saved to the `data/datasets` directory by default.
+To collect tweets from specific Twitter accounts:
+
+```bash
+uv run data/twitter_data_collector.py --mode authors --authors paulg garrytan ycombinator
+```
+
+By default, the collector will fetch tweets from these tech/VC Twitter accounts if no authors are specified:
+- paulg (Paul Graham)
+- sama (Sam Altman)
+- naval (Naval Ravikant)
+- jason (Jason Calacanis)
+- eladgil (Elad Gil)
+- garrytan (Garry Tan)
+- ycombinator (Y Combinator)
+- techcrunch (TechCrunch)
+- a16z (Andreessen Horowitz)
+- sequoia (Sequoia Capital)
+
+**Important Notes**: 
+- When specifying query terms with spaces, use double quotes around phrases
+- Don't use the @ symbol when specifying Twitter usernames
+- The collected data will be saved to the `data/datasets` directory by default
+
+##### Additional Options
+
+```bash
+# Set maximum number of tweets per topic/author (10-100)
+--max-results 50
+
+# Set output directory
+--output-dir data/my_datasets
+
+# Set custom output filename
+--output-file my_tweets.json
+
+# Limit the number of API requests (to stay under rate limits)
+--max-requests 20
+```
 
 ### Viewing Stored Tweets
 

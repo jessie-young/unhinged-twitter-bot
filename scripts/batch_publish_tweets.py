@@ -149,13 +149,24 @@ def read_tweets_from_file(file_path: str) -> List[Dict[str, Any]]:
         
         tweets = []
         
-        # Special case for the twitter_data_* files with topic_results structure
-        if isinstance(data, dict) and 'topic_results' in data:
-            # This is the structure we found in twitter_data_20250312_164318.json
-            for topic, topic_data in data['topic_results'].items():
-                if 'tweets' in topic_data and isinstance(topic_data['tweets'], list):
-                    logger.info(f"Found tweets for topic: {topic}")
-                    tweets.extend(topic_data['tweets'])
+        # Special case for twitter_data_* or authors_data_* files with our custom structure
+        if isinstance(data, dict) and 'metadata' in data:
+            collection_type = data.get('metadata', {}).get('collection_type', '')
+            logger.info(f"Detected collection type: {collection_type}")
+            
+            # Handle topic_results structure
+            if 'topic_results' in data:
+                for topic, topic_data in data['topic_results'].items():
+                    if 'tweets' in topic_data and isinstance(topic_data['tweets'], list):
+                        logger.info(f"Found tweets for topic: {topic}")
+                        tweets.extend(topic_data['tweets'])
+            
+            # Handle author_results structure
+            elif 'author_results' in data:
+                for author, author_data in data['author_results'].items():
+                    if 'tweets' in author_data and isinstance(author_data['tweets'], list):
+                        logger.info(f"Found tweets from author: @{author}")
+                        tweets.extend(author_data['tweets'])
                     
         # Check if this is a Twitter API response with 'data' field
         elif isinstance(data, dict):
