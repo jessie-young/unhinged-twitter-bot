@@ -5,6 +5,7 @@ description = "An unhinged Twitter bot"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.115.11",
     "getdaft>=0.4.7",
     "instructor>=1.7.4",
     "jupyter>=1.1.1",
@@ -17,6 +18,7 @@ dependencies = [
     "redis>=5.2.1",
     "sentence-transformers>=3.4.1",
     "tweepy>=4.15.0",
+    "uvicorn>=0.34.0",
 ]
 
 [project.scripts]
