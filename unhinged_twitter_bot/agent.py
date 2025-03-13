@@ -13,7 +13,7 @@ from .twitter import TwitterAPI
 
 
 class Agent:
-    def __init__(self, personality_path: str | Path):
+    def __init__(self, personality_path: str | Path, check_cringe: bool = False, cringe_threshold: float = 0.7):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.redis = redis.Redis.from_url("redis://" + REDIS_EVENTS_PUBSUB_ADDR, decode_responses=True)
 
@@ -24,6 +24,13 @@ class Agent:
         self.agent_name = self.personality["name"]
         self.logging = AgentLogger(self.agent_name, simulation_id=os.getenv("SIMULATION_ID", "anonymous-simulation"))
         self.twitter = TwitterAPI()
+
+        # Cringe detection setup
+        self.check_cringe = check_cringe
+        if check_cringe:
+            from .cringe_detector import CringeDetector
+
+            self.cringe_detector = CringeDetector(threshold=cringe_threshold)
 
     def generate_chain_of_thought(self, tweet, logger: AgentSessionLogger):
         prompt = f"""Given this tweet: "{tweet}"
@@ -54,30 +61,118 @@ We want to make high quality responses that are interesting and tend to get lots
 
         return response.choices[0].message.content
 
-    def process_tweet(self, tweet, logger: AgentSessionLogger):
-        try:
-            chain_of_thought = self.generate_chain_of_thought(tweet, logger)
-
-            response_prompt = f"""
-            Here is the chain of thought:
-            {chain_of_thought}
-            Based on the analysis, generate a tweet response as {self.personality['name']}.
-            Tweet: {tweet}
-            Personality: {self.personality}
-            Make it tweet-length appropriate and interesting."""
-
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "Generate a tweet response."},
-                    {"role": "user", "content": response_prompt},
-                ],
-                temperature=0.7,
-                max_tokens=100,
+    def generate_prompt(
+        self,
+        tweet: str,
+        personality: dict,
+        attempt_history: list[dict] | None = None,
+        logger: AgentSessionLogger | None = None,
+    ) -> str:
+        """Dynamically generate a prompt based on previous attempts."""
+        history_context = ""
+        if attempt_history:
+            history_context = "Previous attempts and their issues:\n" + "\n".join(
+                f"- Response: '{attempt['response']}'\n"
+                f"  Issue: {attempt['cringe_reason']} (cringe score: {attempt['cringe_score']})"
+                for i, attempt in enumerate(attempt_history)
             )
 
-            final_response = response.choices[0].message.content
-            logger.log_prompt("tweet_generation", response_prompt, final_response)
+        prompt = f"""You are crafting a response to a tweet. Your goal is to create a natural, authentic interaction 
+that avoids common AI pitfalls like being too formal, trying too hard to be funny, or using forced internet speak.
+
+TWEET TO RESPOND TO: "{tweet}"
+
+RESPONDER'S PERSONALITY:
+{personality}
+
+{history_context if attempt_history else "This is the first attempt at responding."}
+
+Create a prompt that will help generate a response with these guidelines:
+1. Responses should feel natural and conversational, like something a real person would say
+2. Avoid trying too hard to be clever or quirky
+3. Stay true to the personality but don't overact it
+4. Keep the tone casual and authentic
+5. Don't use forced memes or try too hard to sound "internet-savvy"
+6. The response should sound like it came from a real person who happens to have these interests/traits
+
+Generate a prompt that will help create such a response. Focus on authenticity over performance."""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert at crafting natural, authentic social media interactions.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+        )
+        logger.log_prompt("prompt_generation", prompt, response.choices[0].message.content)
+
+        return response.choices[0].message.content
+
+    def process_tweet(self, tweet, logger: AgentSessionLogger):
+        try:
+            max_attempts = 10 if self.check_cringe else 1
+            attempt = 0
+            lowest_cringe_score = float("inf")
+            best_response = None
+            attempt_history = []
+
+            while attempt < max_attempts:
+                # Generate dynamic prompt based on history
+                prompt = self.generate_prompt(tweet, self.personality, attempt_history, logger)
+
+                # Generate response using the dynamic prompt
+                response = self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are an AI agent responding to tweets."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.7,
+                    max_tokens=100,
+                )
+
+                final_response = response.choices[0].message.content
+                logger.log_prompt("tweet_generation", prompt, final_response)
+
+                if self.check_cringe:
+                    is_cringe, score, reason = self.cringe_detector.is_cringe(final_response)
+                    logger.log_prompt("cringe_check", final_response, f"Score: {score}, Reason: {reason}")
+
+                    # Store attempt history
+                    attempt_history.append(
+                        {
+                            "chain_of_thought": prompt,
+                            "response": final_response,
+                            "cringe_score": score,
+                            "cringe_reason": reason,
+                        }
+                    )
+
+                    # Keep track of the least cringe response
+                    if score < lowest_cringe_score:
+                        lowest_cringe_score = score
+                        best_response = final_response
+
+                    if is_cringe:
+                        print(f"Response was cringe (score: {score}): {reason}")
+                        if attempt < max_attempts - 1:
+                            print("Generating new prompt based on feedback...")
+                            attempt += 1
+                            continue
+                        print(f"Max attempts reached, using least cringe response (score: {lowest_cringe_score})")
+                        final_response = best_response
+                    else:
+                        print(f"Response passed cringe check (score: {score})")
+                    break
+                else:
+                    break
+
+                attempt += 1
+
             return final_response
 
         except Exception as e:

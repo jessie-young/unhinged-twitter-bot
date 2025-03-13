@@ -10,10 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class AgentOrchestrator:
-    def __init__(self, profile_set: str):
+    def __init__(self, profile_set: str, check_cringe: bool = False, cringe_threshold: float = 0.7):
         self.profile_set = profile_set
         self.profiles_dir = Path(f"profiles/{profile_set}")
         self.agents: dict[str, tuple[Agent, threading.Thread]] = {}
+        self.check_cringe = check_cringe
+        self.cringe_threshold = cringe_threshold
 
         with open(self.profiles_dir / "profile_generation_metadata.yaml") as f:
             self.metadata = yaml.safe_load(f)
@@ -23,7 +25,7 @@ class AgentOrchestrator:
         agents = []
         for yaml_file in self.profiles_dir.glob("*.yaml"):
             if yaml_file.name != "profile_generation_metadata.yaml":
-                agents.append(Agent(yaml_file))
+                agents.append(Agent(yaml_file, check_cringe=self.check_cringe, cringe_threshold=self.cringe_threshold))
         return agents
 
     def run_agent(self, agent: Agent):

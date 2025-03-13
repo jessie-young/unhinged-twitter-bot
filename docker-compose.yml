@@ -24,7 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.agents
-    command: "uv run -m unhinged_twitter_bot --profile-set profile-set-088c47c2-05a4-411f-8aa6-bc4656ce68e2"
+    command: "uv run -m unhinged_twitter_bot --profile-set profile-set-088c47c2-05a4-411f-8aa6-bc4656ce68e2 --check-cringe --cringe-threshold 0.3"
     depends_on:
       - events-pubsub
       - tweet-embedding-service
