@@ -128,13 +128,38 @@ def main():
     uri = "/app/data/lancedb"
     db = lancedb.connect(uri)
 
+    # Get table name from environment variable if set, otherwise use default
+    table_name = os.environ.get("LANCEDB_TABLE_NAME", LANCEDB_TABLE_NAME)
+    logger.info(f"Using table name: {table_name}")
+
     # Create or open table
-    if LANCEDB_TABLE_NAME in db.table_names():
-        table = db.open_table(LANCEDB_TABLE_NAME)
-        logger.info(f"Opened existing '{LANCEDB_TABLE_NAME}' table")
+    if table_name in db.table_names():
+        table = db.open_table(table_name)
+        logger.info(f"Opened existing '{table_name}' table")
     else:
-        table = db.create_table(LANCEDB_TABLE_NAME, schema=Tweet)
-        logger.info(f"Created new '{LANCEDB_TABLE_NAME}' table")
+        table = db.create_table(table_name, schema=Tweet)
+        logger.info(f"Created new '{table_name}' table")
+        
+    # Dump the contents of the table (limited to avoid memory issues)
+    logger.info(f"Dumping contents of table '{table_name}':")
+    
+    # Count total records
+    total_count = len(table)
+    logger.info(f"Table contains {total_count} total records")
+    
+    # Show a limited number of records
+    max_records_to_display = 5
+    if total_count == 0:
+        logger.info("Table is empty")
+    else:
+        # Use execute() to get the raw data and limit the number of records
+        query_result = table.search().limit(max_records_to_display).to_list()
+        
+        logger.info(f"Displaying first {min(max_records_to_display, total_count)} records:")
+        for i, record in enumerate(query_result):
+            # Create a clean version without the vector to display
+            display_record = {k: v for k, v in record.items() if k != 'vector'}
+            logger.info(f"Record {i + 1}: {display_record}")
 
     api = TwitterAPI()
     for tweet in api.get_tweets():
