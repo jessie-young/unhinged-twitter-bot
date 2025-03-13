@@ -105,7 +105,7 @@ def run_simulation(seed: SimulationSeed, build: bool):
 
         time.sleep(999999999)
     finally:
-        subprocess.call(["docker-compose", "down"])
+        subprocess.call(["docker-compose", "down"], env=env)
 
 
 def main():
