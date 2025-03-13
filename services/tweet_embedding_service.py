@@ -9,21 +9,15 @@ from lancedb.pydantic import LanceModel, Vector
 from lancedb.embeddings import get_registry
 import logging
 
+from unhinged_twitter_bot.config import LANCEDB_TABLE_NAME
+from unhinged_twitter_bot.twitter import TwitterAPI
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# Redis connection
-REDIS_HOST = os.environ.get('REDIS_EVENTS_PUBSUB_ADDR', 'localhost:6379')
-host, port = REDIS_HOST.split(':')
-redis_client = redis.Redis(host=host, port=int(port))
-
-# LanceDB setup
-uri = "/app/data/lancedb"
-db = lancedb.connect(uri)
 
 # Initialize embedding function
 embedding_func = get_registry().get("sentence-transformers").create(
@@ -47,20 +41,8 @@ class Tweet(LanceModel):
     impression_count: int = 0
     lang: str = None
 
-# Create or open table
-if "tweets" in db.table_names():
-    table = db.open_table("tweets")
-    logger.info("Opened existing 'tweets' table")
-else:
-    table = db.create_table("tweets", schema=Tweet)
-    logger.info("Created new 'tweets' table")
 
-# Subscribe to the tweet channel
-pubsub = redis_client.pubsub()
-pubsub.subscribe('tweets')
-logger.info("Subscribed to 'tweets' channel")
-
-def process_tweet(tweet_data):
+def process_tweet(tweet_data, table):
     """Process a tweet and add its embedding to LanceDB"""
     try:
         # Parse tweet data
@@ -141,24 +123,22 @@ def process_tweet(tweet_data):
 
 def main():
     logger.info("Tweet embedding service started")
-    
-    try:
-        for message in pubsub.listen():
-            if message['type'] == 'message':
-                tweet_data = message['data']
-                if isinstance(tweet_data, bytes):
-                    tweet_data = tweet_data.decode('utf-8')
-                    
-                logger.info(f"Received new tweet")
-                process_tweet(tweet_data)
-                
-    except KeyboardInterrupt:
-        logger.info("Service shutting down")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-    finally:
-        pubsub.unsubscribe()
-        redis_client.close()
+
+    # LanceDB setup
+    uri = "/app/data/lancedb"
+    db = lancedb.connect(uri)
+
+    # Create or open table
+    if LANCEDB_TABLE_NAME in db.table_names():
+        table = db.open_table(LANCEDB_TABLE_NAME)
+        logger.info("Opened existing 'tweets' table")
+    else:
+        table = db.create_table(LANCEDB_TABLE_NAME, schema=Tweet)
+        logger.info(f"Created new '{LANCEDB_TABLE_NAME}' table")
+
+    api = TwitterAPI()
+    for tweet in api.get_tweets():
+        process_tweet(tweet, table)
 
 if __name__ == "__main__":
-    main() 
+    main()

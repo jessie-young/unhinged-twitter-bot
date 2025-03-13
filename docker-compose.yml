@@ -15,6 +15,7 @@ services:
       - events-pubsub
     environment:
       - REDIS_EVENTS_PUBSUB_ADDR=events-pubsub:6379
+      - LANCEDB_TABLE_NAME=${LANCEDB_TABLE_NAME-tweets}
     volumes:
       - .env.dev:/app/.env.dev
       - ./data:/app/data

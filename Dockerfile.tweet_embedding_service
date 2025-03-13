@@ -1,20 +1,11 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Add additional dependencies needed for this service
-RUN pip install --no-cache-dir redis
-
-# Copy service code
-COPY services/tweet_embedding_service.py /app/
-COPY data /app/data
-
-# Make script executable
-RUN chmod +x /app/tweet_embedding_service.py
+COPY ./ .
+RUN pip install uv
+RUN uv sync --frozen --no-dev
 
 # Run the service
-CMD ["python", "/app/tweet_embedding_service.py"] 
+CMD ["uv", "run", "/app/services/tweet_embedding_service.py"] 
