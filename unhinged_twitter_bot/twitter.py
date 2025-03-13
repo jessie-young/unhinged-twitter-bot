@@ -22,7 +22,7 @@ class TwitterAPI:
         tweet_data = {"author": author, "content": content}
         result = self.redis.publish(REDIS_TWEET_TOPIC, json.dumps(tweet_data))
         logger.info(
-            "Published tweet to Redis pubsub `{}` with number of channels/subscribers alerted: {}",
+            "Published tweet to Redis pubsub `%s` with number of channels/subscribers alerted: %s",
             REDIS_TWEET_TOPIC,
             result,
         )

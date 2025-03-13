@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -117,7 +118,9 @@ def run_agent(personality_path: str | Path):
     twitter = TwitterAPI()
     for tweet_str in twitter.get_tweets():
         try:
-            tweet_data = eval(tweet_str)
+            # Safely handle the tweet string by encoding/decoding with error handling.
+            tweet_str = tweet_str.encode("utf-8", errors="ignore").decode("utf-8")
+            tweet_data = json.loads(tweet_str)
 
             # Skip if the tweet is from ourself.
             if tweet_data["author"] == personality["name"]:
@@ -132,6 +135,8 @@ def run_agent(personality_path: str | Path):
 
             print(f"Processing relevant tweet: {explanation}")
             response = process_tweet(tweet_data["content"], personality)
+            # Ensure response is also properly encoded.
+            response = response.encode("utf-8", errors="ignore").decode("utf-8")
             twitter.make_tweet(response, personality["name"])
             print(f"Responded to tweet from {tweet_data['author']}!")
 
