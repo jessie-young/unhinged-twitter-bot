@@ -24,20 +24,19 @@ def run_simulation(seed: SimulationSeed):
     ],
     env={
         "LANCEDB_TABLE_NAME": seed.seed_memory_id,
+        "OPENAI_API_KEY": os.environ["OPENAI_API_KEY"],
         "PATH": os.environ["PATH"],
     })
 
     try:
+        # Wait for all services to be up
         while True:
             result = subprocess.run(["docker-compose", "ps", "--format", "json"], env={"PATH": os.environ["PATH"]}, text=True, capture_output=True)
             if result.returncode != 0:
                 raise RuntimeError("Failed to check Docker services status")
 
             if result.stdout != "":
-                # Parse JSON output to check service status
                 services = [s for s in result.stdout.split("\n") if s != ""]
-                
-                # Check if all services are running
                 all_running = all(
                     '"State":"running"' in service
                     for service in services
@@ -48,12 +47,19 @@ def run_simulation(seed: SimulationSeed):
                     break
 
             print("Waiting for services to start...")
-            time.sleep(2)  # Wait 2 seconds before checking again
+            time.sleep(2)
 
+        # Maker the tweets
         api = TwitterAPI()
-
         for tweet in seed.simulation_event_stream:
             api.make_tweet(content=tweet, author="simulator")
+
+        # Follow logs in real-time
+        log_process = subprocess.call(
+            ["docker-compose", "logs", "-f"],
+            env={"PATH": os.environ["PATH"]},
+            text=True,
+        )
 
         time.sleep(999999999)
     finally:

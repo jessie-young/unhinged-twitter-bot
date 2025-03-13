@@ -7,6 +7,7 @@ import redis
 import yaml
 from openai import OpenAI
 
+from .config import REDIS_EVENTS_PUBSUB_ADDR
 from .activity_logging import AgentLogger, AgentSessionLogger
 from .twitter import TwitterAPI
 
@@ -14,7 +15,7 @@ from .twitter import TwitterAPI
 class Agent:
     def __init__(self, personality_path: str | Path):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.redis = redis.Redis(host="localhost", port=6379, decode_responses=True)
+        self.redis = redis.Redis.from_url(REDIS_EVENTS_PUBSUB_ADDR, decode_responses=True)
 
         # Load personality from file.
         with open(personality_path) as file:

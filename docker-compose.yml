@@ -15,7 +15,7 @@ services:
       - events-pubsub
     environment:
       - REDIS_EVENTS_PUBSUB_ADDR=events-pubsub:6379
-      - LANCEDB_TABLE_NAME=${LANCEDB_TABLE_NAME-tweets}
+      - LANCEDB_TABLE_NAME=${LANCEDB_TABLE_NAME}
     volumes:
       - .env.dev:/app/.env.dev
       - ./data:/app/data
@@ -24,14 +24,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.agents
-    command: "uv run -m unhinged_twitter_bot --session-id my-sess-TODO-CHANGE"
+    command: "uv run -m unhinged_twitter_bot --profile-set profile-set-088c47c2-05a4-411f-8aa6-bc4656ce68e2"
     depends_on:
       - events-pubsub
       - tweet-embedding-service
     volumes:
       - ./data:/app/data
+      - ./profiles:/app/profiles
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_EVENTS_PUBSUB_ADDR=events-pubsub:6379
 
 volumes:
   redis_data:
