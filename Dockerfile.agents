@@ -1,0 +1,11 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY ./ .
+RUN pip install uv
+RUN uv sync --frozen --no-dev
+
+# Run the service
+CMD ["uv", "run", "-m", "unhinged_twitter_bot", "--session-id", "cf8c08f2-4980-4a08-b1a0-486a133b9565"]

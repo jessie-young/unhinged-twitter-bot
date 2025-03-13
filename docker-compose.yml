@@ -20,5 +20,18 @@ services:
       - .env.dev:/app/.env.dev
       - ./data:/app/data
 
+  agents:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    command: "uv run -m unhinged_twitter_bot --session-id my-sess-TODO-CHANGE"
+    depends_on:
+      - events-pubsub
+      - tweet-embedding-service
+    volumes:
+      - ./data:/app/data
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
 volumes:
   redis_data:

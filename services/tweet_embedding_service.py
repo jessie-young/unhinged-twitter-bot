@@ -131,7 +131,7 @@ def main():
     # Create or open table
     if LANCEDB_TABLE_NAME in db.table_names():
         table = db.open_table(LANCEDB_TABLE_NAME)
-        logger.info("Opened existing 'tweets' table")
+        logger.info(f"Opened existing '{LANCEDB_TABLE_NAME}' table")
     else:
         table = db.create_table(LANCEDB_TABLE_NAME, schema=Tweet)
         logger.info(f"Created new '{LANCEDB_TABLE_NAME}' table")
