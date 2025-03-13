@@ -123,17 +123,17 @@ Determine if this tweet is relevant to your interests. Think step by step:
 
     def run_agent(self):
         for tweet_str in self.twitter.get_tweets():
-            with self.logging.session_logger(self.agent_name + "_" + str(uuid.uuid4())) as logger:
-                try:
-                    # Safely handle the tweet string by encoding/decoding with error handling.
-                    tweet_str = tweet_str.encode("utf-8", errors="ignore").decode("utf-8")
-                    tweet_data = json.loads(tweet_str)
+            try:
+                # Safely handle the tweet string by encoding/decoding with error handling.
+                tweet_str = tweet_str.encode("utf-8", errors="ignore").decode("utf-8")
+                tweet_data = json.loads(tweet_str)
 
-                    # Skip if the tweet is from ourself.
-                    if tweet_data["author"] == self.agent_name:
-                        print(f"Skipping own tweet from {tweet_data['author']}")
-                        continue
+                # Skip if the tweet is from ourself.
+                if tweet_data["author"] == self.agent_name:
+                    print(f"Skipping own tweet from {tweet_data['author']}")
+                    continue
 
+                with self.logging.session_logger(self.agent_name + "_" + str(uuid.uuid4())) as logger:
                     # Check if the tweet is relevant to our interests.
                     is_relevant, explanation = self.is_tweet_relevant(tweet_data["content"], logger)
                     if not is_relevant:
@@ -147,6 +147,6 @@ Determine if this tweet is relevant to your interests. Think step by step:
                     self.twitter.make_tweet(response, self.personality["name"])
                     print(f"Responded to tweet from {tweet_data['author']}!")
 
-                except Exception as e:
-                    print(f"Error processing tweet data: {e!s}")
-                    continue
+            except Exception as e:
+                print(f"Error processing tweet data: {e!s}")
+                continue
