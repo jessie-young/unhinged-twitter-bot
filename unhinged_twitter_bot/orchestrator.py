@@ -10,19 +10,19 @@ logger = logging.getLogger(__name__)
 
 
 class AgentOrchestrator:
-    def __init__(self, session_id: str):
-        self.session_id = session_id
-        self.session_dir = Path(f"sessions/{session_id}")
+    def __init__(self, profile_set: str):
+        self.profile_set = profile_set
+        self.profiles_dir = Path(f"profiles/{profile_set}")
         self.agents: dict[str, tuple[Agent, threading.Thread]] = {}
 
-        with open(self.session_dir / "session_metadata.yaml") as f:
+        with open(self.profiles_dir / "profile_generation_metadata.yaml") as f:
             self.metadata = yaml.safe_load(f)
 
     def load_agents(self) -> list[Agent]:
-        """Load all agent personalities from the session directory."""
+        """Load all agent personalities from the profiles directory."""
         agents = []
-        for yaml_file in self.session_dir.glob("*.yaml"):
-            if yaml_file.name != "session_metadata.yaml":
+        for yaml_file in self.profiles_dir.glob("*.yaml"):
+            if yaml_file.name != "profile_generation_metadata.yaml":
                 agents.append(Agent(yaml_file))
         return agents
 
@@ -36,7 +36,7 @@ class AgentOrchestrator:
 
     def start(self):
         """Start all agents in separate threads."""
-        logger.info("Starting session %s with %d agents", self.session_id, self.metadata["num_agents"])
+        logger.info("Starting profile set %s with %d agents", self.profile_set, self.metadata["num_agents"])
 
         for agent in self.load_agents():
             thread = threading.Thread(
@@ -47,6 +47,6 @@ class AgentOrchestrator:
 
     def stop(self):
         """Stop all running agents."""
-        logger.info("Stopping session %s", self.session_id)
+        logger.info("Stopping profile set %s", self.profile_set)
         # Note: Since threads are daemon=True, they'll be terminated when the main thread exits
         self.agents.clear()

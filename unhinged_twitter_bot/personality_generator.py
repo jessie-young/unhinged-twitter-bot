@@ -292,15 +292,15 @@ def generate_personality(field_of_focus: str | None = None, max_iterations: int 
     raise RuntimeError("Should not reach this point")
 
 
-def create_session(num_agents: int = 100, field_of_focus: str | None = None) -> str:
-    session_id = str(uuid.uuid4())
-    session_dir = Path(f"sessions/{session_id}")
-    session_dir.mkdir(parents=True, exist_ok=True)
+def create_profiles(num_agents: int = 5, field_of_focus: str | None = None) -> str:
+    profile_generation_session_id = f"profile-set-{uuid.uuid4()}"
+    dir = Path(f"profiles/{profile_generation_session_id}")
+    dir.mkdir(parents=True, exist_ok=True)
 
     personalities: list[dict] = []
     for i in range(num_agents):
         personality = generate_personality(field_of_focus=field_of_focus)
-        personality_file = session_dir / f"{personality['name'].replace(' ', '_')}.yaml"
+        personality_file = dir / f"{personality['name'].replace(' ', '_')}.yaml"
 
         with open(personality_file, "w") as f:
             yaml.dump(personality, f, default_flow_style=False)
@@ -309,13 +309,13 @@ def create_session(num_agents: int = 100, field_of_focus: str | None = None) -> 
         print(f"Generated personality {i+1}/{num_agents}: {personality['name']}")
 
     metadata = {
-        "session_id": session_id,
+        "profile_generation_session_id": profile_generation_session_id,
         "num_agents": num_agents,
         "field_of_focus": field_of_focus,
         "personalities": [p["name"] for p in personalities],
     }
 
-    with open(session_dir / "session_metadata.yaml", "w") as f:
+    with open(dir / "profile_generation_metadata.yaml", "w") as f:
         yaml.dump(metadata, f, default_flow_style=False)
 
-    return session_id
+    return profile_generation_session_id
