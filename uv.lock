@@ -1,5 +1,9 @@
 version = 1
 requires-python = ">=3.12"
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version < '3.13'",
+]
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -1781,6 +1785,21 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-to-pyarrow"
+version = "0.1.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pyarrow" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8d/e9/77c78ac01de8e4a7b27d928aa3ae4377e271a74d5fe2c49c04c89002d48e/pydantic_to_pyarrow-0.1.6.tar.gz", hash = "sha256:519285df1eff07d606c46aa54f619da8e3eccb09d023593e02c90e2e2bef378c", size = 57495 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f1/4b/a14496f596e6161622ee06a9cd0d6fbfc721fec8d11898407899b60c3e6d/pydantic_to_pyarrow-0.1.6-py3-none-any.whl", hash = "sha256:60ec966433a7856e84a69113b1ae9bc248e9ca1a9b688f1b9f344079fa9dddd3", size = 8330 },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2537,6 +2556,7 @@ dependencies = [
     { name = "lancedb" },
     { name = "openai" },
     { name = "pandas" },
+    { name = "pydantic-to-pyarrow" },
     { name = "python-dotenv" },
     { name = "redis" },
     { name = "sentence-transformers" },
@@ -2557,6 +2577,7 @@ requires-dist = [
     { name = "lancedb", specifier = ">=0.21.1" },
     { name = "openai", specifier = ">=1.66.3" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pydantic-to-pyarrow", specifier = ">=0.1.6" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "redis", specifier = ">=5.2.1" },
     { name = "sentence-transformers", specifier = ">=3.4.1" },
