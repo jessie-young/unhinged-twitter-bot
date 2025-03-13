@@ -3,5 +3,7 @@
 
 # Environment variables
 .env
-.env.*
 *.env
+
+
+*/.ipynb_checkpoints/*
