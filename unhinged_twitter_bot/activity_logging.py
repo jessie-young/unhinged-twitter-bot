@@ -23,7 +23,7 @@ class AgentSessionLogger:
         if self.log_file:
             self.log_file.close()
 
-    def log_prompt(self, prompt: str, response: str) -> None:
+    def log_prompt(self, prompt_type: str, prompt: str, response: str) -> None:
         if self.log_file:
             self.log_file.write(
                 json.dumps(
@@ -31,6 +31,7 @@ class AgentSessionLogger:
                         "session_id": self.session_id,
                         "log_idx": self.session_log_idx,
                         "type": "prompt",
+                        "prompt_type": prompt_type,
                         "data": {
                             "prompt": prompt,
                             "response": response,

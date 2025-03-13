@@ -50,7 +50,7 @@ We want to make high quality responses that are interesting and tend to get lots
             temperature=0.7,
         )
 
-        logger.log_prompt(prompt, response.choices[0].message.content)
+        logger.log_prompt("chain_of_thought", prompt, response.choices[0].message.content)
 
         return response.choices[0].message.content
 
@@ -74,7 +74,7 @@ We want to make high quality responses that are interesting and tend to get lots
             )
 
             final_response = response.choices[0].message.content
-            logger.log_prompt(response_prompt, final_response)
+            logger.log_prompt("tweet_generation", response_prompt, final_response)
             final_output = f"""
 Chain of Thought:
 {chain_of_thought}
@@ -115,7 +115,7 @@ Determine if this tweet is relevant to your interests. Think step by step:
         )
 
         result = response.choices[0].message.content
-        logger.log_prompt(prompt, result)
+        logger.log_prompt("tweet_relevance", prompt, result)
         is_relevant = result.upper().startswith("YES")
         explanation = result.split(":", 1)[1].strip() if ":" in result else result
 
