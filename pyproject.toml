@@ -19,6 +19,7 @@ dependencies = [
 [project.scripts]
 events = "scripts.events:main"
 simulate = "unhinged_twitter_bot.simulation:main"
+seed = "data.load_data:main"
 
 [build-system]
 requires = ["hatchling"]

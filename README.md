@@ -162,7 +162,7 @@ To load Twitter data into the vector database, use the `load_data.py` script:
 
 ```bash
 # Load startup-related tweets from the JSON file into a table named 'tweets'
-uv run data/load_data.py --input-json data/datasets/twitter_data_20250312_164318.json --db-uri data/seed --table-name tweets
+uv run seed --input-json data/datasets/twitter_data_20250312_164318.json --db-uri data/seed --table-name tweets
 ```
 
 #### Parameters:
