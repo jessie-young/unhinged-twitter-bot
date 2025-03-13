@@ -33,7 +33,7 @@ LANCEDB_TABLE_NAME=my_tweets_table docker-compose up --build
 Now you can run the simulation script with:
 
 ```bash
-uv run simulate --history-db-name jay_tweets --tweets "Hello world" "Index this" "now"
+uv run simulate --tweets "Hello world" "Index this" "now"
 ```
 
 You can pass in an arbitrary number of tweets this way. In the future we will extend this to be a .txt file.
