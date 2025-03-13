@@ -16,17 +16,19 @@ class SimulationSeed:
 
 def run_simulation(seed: SimulationSeed, build: bool):
     print("Spinning up simulation world...")
+    env = {
+        "LANCEDB_TABLE_NAME": seed.seed_memory_id,
+        "OPENAI_API_KEY": os.environ["OPENAI_API_KEY"],
+        "PATH": os.environ["PATH"],
+        "SIMULATION_ID": seed.simulation_id,
+    }
     proc = subprocess.Popen([
         "docker-compose",
         "up",
         "-d",
         *([] if build else ["--build"]),
     ],
-    env={
-        "LANCEDB_TABLE_NAME": seed.seed_memory_id,
-        "OPENAI_API_KEY": os.environ["OPENAI_API_KEY"],
-        "PATH": os.environ["PATH"],
-    })
+    env=env)
 
     try:
         # Wait for all services to be up
@@ -50,6 +52,7 @@ def run_simulation(seed: SimulationSeed, build: bool):
             time.sleep(2)
 
         # Maker the tweets
+        time.sleep(8)
         api = TwitterAPI()
         for tweet in seed.simulation_event_stream:
             api.make_tweet(content=tweet, author="simulator")
@@ -57,7 +60,7 @@ def run_simulation(seed: SimulationSeed, build: bool):
         # Follow logs in real-time
         log_process = subprocess.call(
             ["docker-compose", "logs", "-f"],
-            env={"PATH": os.environ["PATH"]},
+            env=env,
             text=True,
         )
 

@@ -64,12 +64,13 @@ class AgentSessionLogger:
 
 
 class AgentLogger:
-    def __init__(self, agent_name: str, log_dump_folder: str = AGENT_LOG_FOLDER):
-        self.log_dump_folder = log_dump_folder
-        os.makedirs(log_dump_folder, exist_ok=True)
+    def __init__(self, agent_name: str, simulation_id: str, log_dump_folder: str = AGENT_LOG_FOLDER):
         self.agent_name = agent_name
+        self.dest = os.path.join(log_dump_folder, simulation_id)
+        os.makedirs(self.dest, exist_ok=True)
 
     @contextlib.contextmanager
     def session_logger(self, session_id: str) -> Generator[AgentSessionLogger, Any, Any]:
-        with AgentSessionLogger(session_id, self.log_dump_folder) as logger:
+        print(f"CREATING AGENT SESSION LOGGER: {self.dest}")
+        with AgentSessionLogger(session_id, self.dest) as logger:
             yield logger

@@ -22,7 +22,7 @@ class Agent:
             self.personality = yaml.safe_load(file)
 
         self.agent_name = self.personality["name"]
-        self.logging = AgentLogger(self.agent_name)
+        self.logging = AgentLogger(self.agent_name, simulation_id=os.getenv("SIMULATION_ID", "anonymous-simulation"))
         self.twitter = TwitterAPI()
 
     def generate_chain_of_thought(self, tweet, logger: AgentSessionLogger):
