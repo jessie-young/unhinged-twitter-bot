@@ -37,9 +37,15 @@ class Tweet(LanceModel):
     vector: Vector(embedding_func.ndims()) = embedding_func.VectorField()
     tweet_id: str = None
     username: str = None
+    author_id: str = None
     retweets: int = 0
     likes: int = 0
-    timestamp: float = None
+    created_at: float = None  # Renamed from timestamp
+    reply_count: int = 0
+    quote_count: int = 0
+    bookmark_count: int = 0
+    impression_count: int = 0
+    lang: str = None
 
 # Create or open table
 if "tweets" in db.table_names():
@@ -66,18 +72,45 @@ def process_tweet(tweet_data):
             tweet_text = tweet.get('content', '')
             username = tweet.get('author', '')
             tweet_id = str(uuid.uuid4())  # Generate a UUID since there's no ID
+            author_id = tweet.get('author_id', username)
             retweets = 0
             likes = 0
-            timestamp = time.time()
+            created_at = time.time()
+            reply_count = 0
+            quote_count = 0
+            bookmark_count = 0
+            impression_count = 0
+            lang = tweet.get('lang', 'en')
             logger.info(f"Received tweet in TwitterAPI format from {username}")
         else:
             # This is the expected format
             tweet_text = tweet.get('text', '')
             username = tweet.get('username', '')
             tweet_id = tweet.get('id', str(uuid.uuid4()))
+            author_id = tweet.get('author_id', username)
+            
+            # Extract metrics
             retweets = int(tweet.get('retweets', 0))
             likes = int(tweet.get('likes', 0))
-            timestamp = tweet.get('timestamp', time.time())
+            reply_count = int(tweet.get('reply_count', 0))
+            quote_count = int(tweet.get('quote_count', 0))
+            bookmark_count = int(tweet.get('bookmark_count', 0))
+            impression_count = int(tweet.get('impression_count', 0))
+            
+            # Convert timestamp or use created_at directly
+            if 'created_at' in tweet:
+                created_at = tweet.get('created_at')
+                # If created_at is a string, try to convert to timestamp
+                if isinstance(created_at, str):
+                    try:
+                        from datetime import datetime
+                        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00')).timestamp()
+                    except (ValueError, TypeError):
+                        created_at = time.time()
+            else:
+                created_at = tweet.get('timestamp', time.time())
+                
+            lang = tweet.get('lang', 'en')
         
         if not tweet_text:
             logger.warning(f"Received empty tweet text for tweet ID {tweet_id}")
@@ -88,9 +121,15 @@ def process_tweet(tweet_data):
             "text": tweet_text,
             "tweet_id": tweet_id,
             "username": username,
+            "author_id": author_id,
             "retweets": retweets,
             "likes": likes,
-            "timestamp": timestamp
+            "created_at": created_at,
+            "reply_count": reply_count,
+            "quote_count": quote_count,
+            "bookmark_count": bookmark_count,
+            "impression_count": impression_count,
+            "lang": lang
         }
         
         # Add to LanceDB

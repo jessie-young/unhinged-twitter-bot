@@ -1,7 +1,7 @@
 */__pycache__/
 *.egg-info*
 
-# LanceDB files
-data/lancedb/
-**/data/lancedb/
-*.lance
+# Environment variables
+.env
+.env.*
+*.env
