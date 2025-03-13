@@ -1,11 +1,13 @@
 import json
 import os
+import uuid
 from pathlib import Path
 
 import redis
 import yaml
 from openai import OpenAI
 
+from .activity_logging import AgentLogger, AgentSessionLogger
 from .twitter import TwitterAPI
 
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
@@ -75,7 +77,7 @@ Final Response:
         return f"Error processing tweet: {e!s}"
 
 
-def is_tweet_relevant(tweet: str, personality: dict) -> tuple[bool, str]:
+def is_tweet_relevant(tweet: str, personality: dict, logger: AgentSessionLogger) -> tuple[bool, str]:
     """Determine if a tweet is relevant to the agent's interests."""
     prompt = f"""Given this tweet: "{tweet}"
 
@@ -103,6 +105,7 @@ Respond with either YES or NO, followed by a brief explanation.
     )
 
     result = response.choices[0].message.content
+    logger.log_prompt(prompt, result)
     is_relevant = result.upper().startswith("YES")
     explanation = result.split(":", 1)[1].strip() if ":" in result else result
 
@@ -115,34 +118,38 @@ def run_agent(personality_path: str | Path):
     with open(personality_path) as file:
         personality = yaml.safe_load(file)
 
+    agent_name = personality["name"]
+    logging = AgentLogger(agent_name)
+
     twitter = TwitterAPI()
     for tweet_str in twitter.get_tweets():
-        try:
-            # Safely handle the tweet string by encoding/decoding with error handling.
-            tweet_str = tweet_str.encode("utf-8", errors="ignore").decode("utf-8")
-            tweet_data = json.loads(tweet_str)
+        with logging.session_logger(agent_name + "_" + str(uuid.uuid4())) as logger:
+            try:
+                # Safely handle the tweet string by encoding/decoding with error handling.
+                tweet_str = tweet_str.encode("utf-8", errors="ignore").decode("utf-8")
+                tweet_data = json.loads(tweet_str)
 
-            # Skip if the tweet is from ourself.
-            if tweet_data["author"] == personality["name"]:
-                print(f"Skipping own tweet from {tweet_data['author']}")
+                # Skip if the tweet is from ourself.
+                if tweet_data["author"] == agent_name:
+                    print(f"Skipping own tweet from {tweet_data['author']}")
+                    continue
+
+                # Check if the tweet is relevant to our interests.
+                is_relevant, explanation = is_tweet_relevant(tweet_data["content"], personality, logger)
+                if not is_relevant:
+                    print(f"Skipping irrelevant tweet: {explanation}")
+                    continue
+
+                print(f"Processing relevant tweet: {explanation}")
+                response = process_tweet(tweet_data["content"], personality)
+                # Ensure response is also properly encoded.
+                response = response.encode("utf-8", errors="ignore").decode("utf-8")
+                twitter.make_tweet(response, personality["name"])
+                print(f"Responded to tweet from {tweet_data['author']}!")
+
+            except Exception as e:
+                print(f"Error processing tweet data: {e!s}")
                 continue
-
-            # Check if the tweet is relevant to our interests.
-            is_relevant, explanation = is_tweet_relevant(tweet_data["content"], personality)
-            if not is_relevant:
-                print(f"Skipping irrelevant tweet: {explanation}")
-                continue
-
-            print(f"Processing relevant tweet: {explanation}")
-            response = process_tweet(tweet_data["content"], personality)
-            # Ensure response is also properly encoded.
-            response = response.encode("utf-8", errors="ignore").decode("utf-8")
-            twitter.make_tweet(response, personality["name"])
-            print(f"Responded to tweet from {tweet_data['author']}!")
-
-        except Exception as e:
-            print(f"Error processing tweet data: {e!s}")
-            continue
 
 
 if __name__ == "__main__":
