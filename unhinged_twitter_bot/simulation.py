@@ -26,7 +26,7 @@ def run_simulation(seed: SimulationSeed, build: bool):
         "docker-compose",
         "up",
         "-d",
-        *([] if build else ["--build"]),
+        *(["--build"] if build else []),
     ],
     env=env)
 
@@ -52,7 +52,9 @@ def run_simulation(seed: SimulationSeed, build: bool):
             time.sleep(2)
 
         # Maker the tweets
+        print("Getting ready to fire off tweets...")
         time.sleep(8)
+        print("We're ready -- let's tweet!")
         api = TwitterAPI()
         for tweet in seed.simulation_event_stream:
             api.make_tweet(content=tweet, author="simulator")
