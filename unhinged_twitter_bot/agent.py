@@ -58,7 +58,10 @@ We want to make high quality responses that are interesting and tend to get lots
         try:
             chain_of_thought = self.generate_chain_of_thought(tweet, logger)
 
-            response_prompt = f"""Based on the analysis, generate a tweet response as {self.personality['name']}.
+            response_prompt = f"""
+            Here is the chain of thought:
+            {chain_of_thought}
+            Based on the analysis, generate a tweet response as {self.personality['name']}.
             Tweet: {tweet}
             Personality: {self.personality}
             Make it tweet-length appropriate and interesting."""
@@ -75,14 +78,7 @@ We want to make high quality responses that are interesting and tend to get lots
 
             final_response = response.choices[0].message.content
             logger.log_prompt("tweet_generation", response_prompt, final_response)
-            final_output = f"""
-Chain of Thought:
-{chain_of_thought}
-
-Final Response:
-{self.personality['name']} says: {final_response}
-"""
-            return final_output
+            return final_response
 
         except Exception as e:
             return f"Error processing tweet: {e!s}"
