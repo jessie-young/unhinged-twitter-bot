@@ -28,21 +28,21 @@ BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
 
 # Define default topics to search for
 DEFAULT_TOPICS = [
-    "startup OR founder OR entrepreneur OR \"Y Combinator\" OR VC",
+    "pmf OR a16z OR \"y combinator\" OR \"product market fit\"",
 ]
 
 # Define default authors to collect tweets from
 DEFAULT_AUTHORS = [
-    "paulg",       # Paul Graham
-    "sama",        # Sam Altman
+    # "paulg",       # Paul Graham
+    # "sama",        # Sam Altman
     "naval",       # Naval Ravikant
     "jason",       # Jason Calacanis
-    "eladgil",     # Elad Gil
-    "garrytan",    # Garry Tan
-    "ycombinator", # Y Combinator
-    "techcrunch",  # TechCrunch
-    "a16z",        # Andreessen Horowitz
-    "sequoia",     # Sequoia Capital
+    # "eladgil",     # Elad Gil
+    # "garrytan",    # Garry Tan
+    # "ycombinator", # Y Combinator
+    # "techcrunch",  # TechCrunch
+    # "a16z",        # Andreessen Horowitz
+    # "sequoia",     # Sequoia Capital
 ]
 
 # Twitter API rate limits
